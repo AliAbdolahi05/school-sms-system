@@ -1,0 +1,59 @@
+datasource db {
+  provider = env("DB_PROVIDER")
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  role      Role
+  createdAt DateTime @default(now())
+  smsLogs   SmsLog[] @relation("sentBy")
+}
+
+enum Role {
+  ADMIN
+  ASSISTANT
+}
+
+model Student {
+  id          Int       @id @default(autoincrement())
+  firstName   String
+  lastName    String
+  grade       String
+  parentPhone String
+  absences    Absence[]
+  smsLogs     SmsLog[]
+}
+
+model Absence {
+  id        Int      @id @default(autoincrement())
+  studentId Int
+  date      DateTime
+  reason    String   @default("غیبت")
+  sentSms   Boolean  @default(false)
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model Template {
+  id      Int    @id @default(autoincrement())
+  name    String @unique
+  content String
+}
+
+model SmsLog {
+  id             Int      @id @default(autoincrement())
+  studentId      Int
+  messageType    String
+  messageContent String
+  dateTime       DateTime @default(now())
+  success        Boolean
+  sentById       Int
+  student        Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  sentBy         User     @relation("sentBy", fields: [sentById], references: [id])
+}
